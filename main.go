@@ -11,9 +11,9 @@ import (
 )
 
 type task struct {
-	ID       int    `json:"id,omitempty"`
-	Title    string `json:"title,omitempty"`
-	Finished bool   `json:"finished,omitempty"`
+	ID       int    `json:"id"`
+	Title    string `json:"title"`
+	Finished bool   `json:"finished"`
 }
 
 type errorMessage struct {
@@ -102,6 +102,47 @@ func deleteOneTaskEndPoint(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(task{})
 }
 
+func updateOneTaskEndPoint(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, err := strconv.Atoi(params["id"])
+
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(errorMessage{Message: "The requested ID is not valid"})
+		return
+	}
+
+	var newTask task
+	reqBody, err2 := ioutil.ReadAll(r.Body)
+
+	if err2 != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(errorMessage{Message: "The task data is not valid"})
+		return
+	}
+
+	json.Unmarshal(reqBody, &newTask)
+	newTask.ID = id
+
+	for index, item := range taskList {
+		if item.ID == id {
+			taskList = append(taskList[:index], taskList[index+1:]...)
+			taskList = append(taskList, newTask)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(newTask)
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNotFound)
+	json.NewEncoder(w).Encode(task{})
+}
+
 func main() {
 	router := mux.NewRouter()
 	taskList = []task{}
@@ -110,6 +151,7 @@ func main() {
 	router.HandleFunc("/task", addOneTaskEndPoint).Methods("POST")
 	router.HandleFunc("/task/{id}", getOneTaskEndPoint).Methods("GET")
 	router.HandleFunc("/task/{id}", deleteOneTaskEndPoint).Methods("DELETE")
+	router.HandleFunc("/task/{id}", updateOneTaskEndPoint).Methods("PUT")
 
 	log.Fatal(http.ListenAndServe(":3000", router))
 }
