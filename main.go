@@ -20,6 +20,8 @@ type errorMessage struct {
 	Message string `json:"message,omitempty"`
 }
 
+type emptyResponse struct{}
+
 var taskList []task
 
 func getTaskEndPoint(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +74,7 @@ func getOneTaskEndPoint(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
-	json.NewEncoder(w).Encode(task{})
+	json.NewEncoder(w).Encode(emptyResponse{})
 }
 
 func deleteOneTaskEndPoint(w http.ResponseWriter, r *http.Request) {
@@ -92,14 +94,14 @@ func deleteOneTaskEndPoint(w http.ResponseWriter, r *http.Request) {
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(task{})
+			json.NewEncoder(w).Encode(emptyResponse{})
 			return
 		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
-	json.NewEncoder(w).Encode(task{})
+	json.NewEncoder(w).Encode(emptyResponse{})
 }
 
 func updateOneTaskEndPoint(w http.ResponseWriter, r *http.Request) {
@@ -140,7 +142,7 @@ func updateOneTaskEndPoint(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
-	json.NewEncoder(w).Encode(task{})
+	json.NewEncoder(w).Encode(emptyResponse{})
 }
 
 func main() {
