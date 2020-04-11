@@ -145,6 +145,35 @@ func updateOneTaskEndPoint(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(emptyResponse{})
 }
 
+func checkOneTaskEndPoint(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, err := strconv.Atoi(params["id"])
+
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(errorMessage{Message: "The requested ID is not valid"})
+		return
+	}
+
+	for index, item := range taskList {
+		if item.ID == id {
+			taskList = append(taskList[:index], taskList[index+1:]...)
+			item.Finished = !item.Finished
+			taskList = append(taskList, item)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(item)
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNotFound)
+	json.NewEncoder(w).Encode(emptyResponse{})
+}
+
 func main() {
 	router := mux.NewRouter()
 	taskList = []task{}
@@ -154,6 +183,7 @@ func main() {
 	router.HandleFunc("/task/{id}", getOneTaskEndPoint).Methods("GET")
 	router.HandleFunc("/task/{id}", deleteOneTaskEndPoint).Methods("DELETE")
 	router.HandleFunc("/task/{id}", updateOneTaskEndPoint).Methods("PUT")
+	router.HandleFunc("/task/check/{id}", checkOneTaskEndPoint).Methods("PUT")
 
 	log.Fatal(http.ListenAndServe(":3000", router))
 }
